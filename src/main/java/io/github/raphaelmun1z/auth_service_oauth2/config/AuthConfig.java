@@ -8,12 +8,22 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class AuthConfig {
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
-        return http.authorizeHttpRequests(registry -> {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .authorizeHttpRequests(registry -> {
                 registry.requestMatchers("/login").permitAll();
                 registry.anyRequest().authenticated();
             })
-            .oauth2Login(oauth2login -> oauth2login.loginPage("/login")
-                .successHandler((request, response, authentication) -> response.sendRedirect("/profile"))).build();
+            .oauth2Login(oauth2 -> oauth2
+                .loginPage("/login")
+                .defaultSuccessUrl("/chat", true)
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+            )
+            .build();
     }
 }

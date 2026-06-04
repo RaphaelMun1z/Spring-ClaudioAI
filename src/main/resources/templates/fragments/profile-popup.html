@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--/* ─────────────────────────────────────────
+       Fragment: profile-popup
+       Uso: th:replace="~{fragments/profile-popup :: popup}"
+   ───────────────────────────────────────── */-->
+<th:block th:fragment="popup">
+
+    <style>
+        /* Overlay */
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: transparent;
+            display: none;
+        }
+
+        .popup-overlay.open {
+            display: block;
+        }
+
+        /* Popup card */
+        .profile-popup {
+            position: fixed;
+            bottom: 68px;
+            left: 12px;
+            width: 268px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-3);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, .2),
+            0 16px 48px rgba(0, 0, 0, .45);
+            z-index: 200;
+            overflow: hidden;
+
+            opacity: 0;
+            transform: translateY(10px) scale(.97);
+            pointer-events: none;
+            transition: opacity .18s ease, transform .18s cubic-bezier(.22, 1, .36, 1);
+        }
+
+        .profile-popup.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        /* Header */
+        .pp-header {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 16px 16px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .pp-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 1.5px solid var(--border-2);
+        }
+
+        .pp-avatar-fallback {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-soft);
+            border: 1.5px solid rgba(204, 120, 92, .3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--accent-2);
+            flex-shrink: 0;
+        }
+
+        .pp-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pp-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pp-email {
+            font-size: 11px;
+            font-weight: 300;
+            color: var(--text-2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        /* Google badge inline */
+        .pp-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 5px;
+            background: rgba(66, 133, 244, .1);
+            border: 1px solid rgba(66, 133, 244, .2);
+            border-radius: 100px;
+            padding: 2px 8px 2px 5px;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            color: #7faff7;
+        }
+
+        /* Menu items */
+        .pp-menu {
+            padding: 6px;
+        }
+
+        .pp-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 12.5px;
+            font-weight: 400;
+            color: var(--text-2);
+            cursor: pointer;
+            transition: background .12s, color .12s;
+            text-decoration: none;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+        .pp-item:hover {
+            background: var(--surface-3);
+            color: var(--text-1);
+        }
+
+        .pp-item svg {
+            flex-shrink: 0;
+        }
+
+        .pp-item.danger {
+            color: #c0604a;
+        }
+
+        .pp-item.danger:hover {
+            background: rgba(192, 96, 74, .1);
+            color: #d4735e;
+        }
+
+        .pp-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 6px;
+        }
+
+        /* Status indicator */
+        .pp-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 10px 10px;
+            font-size: 11px;
+            color: var(--text-3);
+        }
+
+        .pp-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #4caf6e;
+            animation: ppblink 2.5s ease infinite;
+        }
+
+        @keyframes ppblink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .3;
+            }
+        }
+    </style>
+
+    <!-- transparent overlay to catch outside clicks -->
+    <div class="popup-overlay" id="popupOverlay"></div>
+
+    <div class="profile-popup" id="profilePopup" role="dialog" aria-label="Perfil do usuário">
+
+        <!-- Header with avatar + info -->
+        <div class="pp-header">
+            <img
+                    th:if="${photo != null and !#strings.isEmpty(photo)}"
+                    th:src="${photo}"
+                    th:alt="${name}"
+                    class="pp-avatar"
+                    referrerpolicy="no-referrer"
+            />
+            <div
+                    th:unless="${photo != null and !#strings.isEmpty(photo)}"
+                    class="pp-avatar-fallback"
+                    th:text="${name != null and #strings.length(name) > 0 ? #strings.substring(name,0,1).toUpperCase() : '?'}"
+            ></div>
+
+            <div class="pp-user-info">
+                <div class="pp-name" th:text="${name}">Usuário</div>
+                <div class="pp-email" th:text="${email}">email@exemplo.com</div>
+                <div class="pp-badge">
+                    <svg width="9" height="9" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
+                              fill="#4285F4"/>
+                        <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
+                              fill="#34A853"/>
+                        <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
+                              fill="#FBBC05"/>
+                        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
+                              fill="#EA4335"/>
+                    </svg>
+                    Google
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu items -->
+        <div class="pp-menu">
+
+            <div class="pp-status">
+                <span class="pp-status-dot"></span>
+                Sessão ativa
+            </div>
+
+            <a class="pp-item" href="/settings">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                Configurações
+            </a>
+
+            <a class="pp-item" href="/profile">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Meu perfil
+            </a>
+
+            <div class="pp-divider"></div>
+
+            <a class="pp-item danger" href="/logout">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Sair da conta
+            </a>
+        </div>
+
+    </div>
+
+</th:block>
+
+</body>
+</html>

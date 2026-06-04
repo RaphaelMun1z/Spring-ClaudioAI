@@ -7,16 +7,30 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class ViewController {
-    @GetMapping("/profile")
-    public String profile(OAuth2AuthenticationToken token, Model model) {
-        model.addAttribute("name", token.getPrincipal().getAttribute("name"));
-        model.addAttribute("email", token.getPrincipal().getAttribute("email"));
-        model.addAttribute("photo", token.getPrincipal().getAttribute("picture"));
-        return "user-profile";
+    private void populateUser(OAuth2AuthenticationToken token, Model model) {
+        if (token != null) {
+            var attrs = token.getPrincipal().getAttributes();
+            model.addAttribute("name", attrs.get("name"));
+            model.addAttribute("email", attrs.get("email"));
+            model.addAttribute("photo", attrs.get("picture"));
+        }
+    }
+
+    @GetMapping({"/", "/chat"})
+    public String chat(OAuth2AuthenticationToken token, Model model) {
+        populateUser(token, model);
+        return "chat";
     }
 
     @GetMapping("/login")
     public String login() {
         return "custom-login";
     }
+
+    @GetMapping("/profile")
+    public String profile(OAuth2AuthenticationToken token, Model model) {
+        populateUser(token, model);
+        return "user-profile";
+    }
+
 }

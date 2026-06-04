@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      lang="pt-BR"
+      th:fragment="layout(title, styles, content, scripts)">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:replace="${title}">ClaudioAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Tiempos+Headline:wght@400&family=Styrene+A:wght@400;500&display=swap"
+          rel="stylesheet"/>
+    <!-- fallback: Styrene não é Google Fonts, usar Sora como substituta fiel ao Claude -->
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Lora:ital,wght@0,400;1,400&display=swap"
+          rel="stylesheet"/>
+    <style>
+        /* ═══════════════════════════════════════════
+           CLAUDIO AI — Global Design Tokens
+           Paleta inspirada no Claude.ai
+        ═══════════════════════════════════════════ */
+        :root {
+            /* Surfaces */
+            --bg: #1a1a19;
+            --sidebar-bg: #1f1f1e;
+            --surface: #262624;
+            --surface-2: #2e2e2c;
+            --surface-3: #353533;
+
+            /* Borders */
+            --border: rgba(255, 255, 255, 0.06);
+            --border-2: rgba(255, 255, 255, 0.10);
+            --border-3: rgba(255, 255, 255, 0.16);
+
+            /* Text */
+            --text-1: #ececea;
+            --text-2: #9b9b97;
+            --text-3: #5a5a56;
+
+            /* Brand accent — warm coral/terracota similar ao Claude */
+            --accent: #cc785c;
+            --accent-soft: rgba(204, 120, 92, 0.12);
+            --accent-2: #d4956a;
+
+            /* Functional */
+            --green: #4caf6e;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+
+            /* Typography */
+            --font-ui: 'Sora', sans-serif;
+            --font-serif: 'Lora', serif;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: var(--font-ui);
+            background: var(--bg);
+            color: var(--text-1);
+            font-size: 14px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--surface-3);
+            border-radius: 4px;
+        }
+
+        /* ── App shell ── */
+        .app {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 256px;
+            flex-shrink: 0;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .sidebar-top {
+            padding: 14px 12px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--accent);
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .logo-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .logo-name {
+            font-family: var(--font-ui);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-1);
+            letter-spacing: -.2px;
+        }
+
+        .sidebar-action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: transparent;
+            color: var(--text-2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s, color .15s;
+        }
+
+        .sidebar-action-btn:hover {
+            background: var(--surface-2);
+            color: var(--text-1);
+        }
+
+        /* search */
+        .sidebar-search {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--surface);
+            border: 1px solid var(--border-2);
+            border-radius: var(--radius-sm);
+            padding: 0 10px;
+            height: 32px;
+        }
+
+        .search-input-wrap svg {
+            color: var(--text-3);
+            flex-shrink: 0;
+        }
+
+        .search-input-wrap input {
+            background: transparent;
+            border: none;
+            outline: none;
+            font-family: var(--font-ui);
+            font-size: 12.5px;
+            color: var(--text-1);
+            width: 100%;
+        }
+
+        .search-input-wrap input::placeholder {
+            color: var(--text-3);
+        }
+
+        /* history */
+        .sidebar-section-label {
+            padding: 14px 14px 5px;
+            font-size: 10.5px;
+            font-weight: 600;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            color: var(--text-3);
+        }
+
+        .sidebar-history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2px 8px 8px;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background .12s;
+            color: var(--text-2);
+            font-size: 12.5px;
+            font-weight: 400;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-decoration: none;
+        }
+
+        .chat-item:hover {
+            background: var(--surface-2);
+            color: var(--text-1);
+        }
+
+        .chat-item.active {
+            background: var(--surface-3);
+            color: var(--text-1);
+        }
+
+        .chat-item svg {
+            flex-shrink: 0;
+            color: var(--text-3);
+        }
+
+        /* sidebar bottom */
+        .sidebar-bottom {
+            border-top: 1px solid var(--border);
+            padding: 10px 12px;
+        }
+
+        /* user avatar trigger */
+        .user-trigger {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background .15s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+        .user-trigger:hover {
+            background: var(--surface-2);
+        }
+
+        .user-avatar-sm {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 1.5px solid var(--border-2);
+        }
+
+        .user-avatar-sm-fallback {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent-soft);
+            border: 1.5px solid rgba(204, 120, 92, .3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-2);
+            flex-shrink: 0;
+        }
+
+        .user-trigger-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-trigger-name {
+            font-size: 12.5px;
+            font-weight: 500;
+            color: var(--text-1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-trigger-plan {
+            font-size: 10.5px;
+            color: var(--text-3);
+            margin-top: 1px;
+        }
+
+        /* ── Main content area ── */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* injected by each page */
+        th\:block[layout\:fragment], [th\:replace], [th\:insert] {
+            display: contents;
+        }
+    </style>
+
+    <!-- Extra page styles slot -->
+    <th:block th:replace="${styles}"></th:block>
+</head>
+<body>
+
+<div class="app">
+
+    <!-- ══ SIDEBAR ══ -->
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <a class="logo" href="/chat">
+                <div class="logo-icon">
+                    <!-- ClaudioAI icon: simple C letter -->
+                    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 6.5C12.9 5.56 11.52 5 10 5C6.69 5 4 7.69 4 11s2.69 6 6 6c1.52 0 2.9-.56 3.95-1.48"
+                              stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <span class="logo-name">ClaudioAI</span>
+            </a>
+            <button class="sidebar-action-btn" title="Novo chat" onclick="window.location='/chat'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="sidebar-search">
+            <div class="search-input-wrap">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" placeholder="Buscar conversas…"/>
+            </div>
+        </div>
+
+        <div class="sidebar-history">
+            <div class="sidebar-section-label">Hoje</div>
+            <a class="chat-item active" href="#">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Como criar uma API REST com Spring
+            </a>
+            <a class="chat-item" href="#">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                OAuth2 com Google no Spring Boot
+            </a>
+
+            <div class="sidebar-section-label">Esta semana</div>
+            <a class="chat-item" href="#">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Configurar Thymeleaf com fragmentos
+            </a>
+            <a class="chat-item" href="#">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Design system para dark mode
+            </a>
+            <a class="chat-item" href="#">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Diferença entre JPA e JDBC
+            </a>
+        </div>
+
+        <div class="sidebar-bottom">
+            <!-- user trigger — opens profile popup -->
+            <button class="user-trigger" id="userTrigger" onclick="toggleProfile()">
+                <img
+                        th:if="${photo != null and !#strings.isEmpty(photo)}"
+                        th:src="${photo}"
+                        th:alt="${name}"
+                        class="user-avatar-sm"
+                        referrerpolicy="no-referrer"
+                />
+                <div
+                        th:unless="${photo != null and !#strings.isEmpty(photo)}"
+                        class="user-avatar-sm-fallback"
+                        th:text="${name != null and #strings.length(name) > 0 ? #strings.substring(name,0,1).toUpperCase() : '?'}"
+                ></div>
+                <div class="user-trigger-info">
+                    <div class="user-trigger-name" th:text="${name}">Usuário</div>
+                    <div class="user-trigger-plan">Plano gratuito</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3); flex-shrink:0;">
+                    <path d="m18 15-6-6-6 6"/>
+                </svg>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ══ PAGE CONTENT ══ -->
+    <main class="main">
+        <th:block th:replace="${content}"></th:block>
+    </main>
+
+</div>
+
+<!-- ══ PROFILE POPUP FRAGMENT ══ -->
+<th:block th:replace="~{fragments/profile-popup :: popup}"></th:block>
+
+<script>
+    function toggleProfile() {
+        const popup = document.getElementById('profilePopup');
+        const overlay = document.getElementById('popupOverlay');
+        const isOpen = popup.classList.contains('open');
+        if (isOpen) {
+            popup.classList.remove('open');
+            overlay.classList.remove('open');
+        } else {
+            popup.classList.add('open');
+            overlay.classList.add('open');
+        }
+    }
+
+    // close on overlay click
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('popupOverlay')
+            .addEventListener('click', () => {
+                document.getElementById('profilePopup').classList.remove('open');
+                document.getElementById('popupOverlay').classList.remove('open');
+            });
+    });
+</script>
+
+<!-- Extra page scripts slot -->
+<th:block th:replace="${scripts}"></th:block>
+</body>
+</html>
